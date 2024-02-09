@@ -10,3 +10,4 @@ class NewsItem:
     image_url: str
     source: str
     author: str
+    publish_date: str

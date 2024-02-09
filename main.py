@@ -1,8 +1,10 @@
 #!/usr/bin/env python3.12
 
-import requests
-import configparser
 from typing import List
+import configparser
+import logging
+import requests
+from classes.ms_teams import MsTeams
 from news_item import NewsItem
 
 
@@ -30,7 +32,6 @@ def get_latest_news(config: configparser.ConfigParser) -> List[NewsItem]:
     response = requests.get(url=source_url, timeout=5)
     output_news: List[NewsItem] = []
     newer_news: bool = False
-
     if response.ok:
         news_json = response.json()
         news_json.reverse()
@@ -44,11 +45,11 @@ def get_latest_news(config: configparser.ConfigParser) -> List[NewsItem]:
                     image_url=item["image_url"],
                     source=item["source"],
                     author=item["author"],
+                    publish_date=item["publish_date"],
                 )
                 output_news.append(news_item)
             if item["id"] == latest_index:
                 newer_news = True
-
     return output_news
 
 
@@ -87,7 +88,9 @@ def main() -> None:
     config: configparser.ConfigParser = get_config()
     latest_news: List[NewsItem] = get_latest_news(config)
     update_config(config, latest_news)
-    print_news(latest_news)
+    teams = MsTeams()
+    for article in latest_news:
+        teams.send_message(article=article)
 
 
 if __name__ == "__main__":
